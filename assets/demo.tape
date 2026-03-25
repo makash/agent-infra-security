@@ -15,9 +15,20 @@ Type "# Install the security skills"
 Enter
 Sleep 500ms
 
+Hide
+Type "echo ''"
+Enter
+Show
+
 Type "npx skills add makash/agent-infra-security"
 Enter
-Sleep 2s
+
+Hide
+Type "echo ''"
+Enter
+Show
+
+Sleep 1500ms
 
 # Scene 2: Show what you get
 Type ""
@@ -39,19 +50,37 @@ Type "# Or skip the agent. Check right now:"
 Enter
 Sleep 500ms
 
-Type "pip show litellm | grep -E '^(Name|Version|Location)'"
+Type 'pip show litellm | grep -E "^(Name|Version|Location)"'
 Enter
-Sleep 1500ms
+
+Hide
+Type "echo ''"
+Enter
+Show
+
+Sleep 1s
 
 Type "pipdeptree -r -p litellm"
 Enter
-Sleep 1500ms
+
+Hide
+Type "echo ''"
+Enter
+Show
+
+Sleep 1s
 
 Type "# Find malicious .pth startup hooks"
 Enter
 Sleep 300ms
-Type 'find "$(python -c "import site; print(site.getsitepackages()[0])")" -name "*.pth" -exec grep -l "base64\|exec\|eval" {} \;'
+Type 'find "$SITE" -name "*.pth" -exec grep -l "base64\|exec\|eval" {} \;'
 Enter
+
+Hide
+Type "echo ''"
+Enter
+Show
+
 Sleep 2s
 
 Sleep 2s

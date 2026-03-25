@@ -1,6 +1,8 @@
 ---
 name: pypi-supply-chain-response
 description: Respond to Python/PyPI supply chain attacks and compromised package incidents. Use this skill whenever a user mentions a compromised Python package, a PyPI supply chain attack, a malicious dependency, credential-stealing malware in a pip package, or asks how to check if they're affected by a package compromise. Also trigger when the user asks about rotating credentials after a Python package incident, finding transitive dependencies, hunting for IOCs from a pip install, auditing Python environments for malicious packages, or generating an incident response checklist for a PyPI compromise. Trigger even if the user just names a package and says it was "hacked", "backdoored", "compromised", or "pwned".
+license: MIT
+compatibility: Requires Bash, Python 3, and pip. Optional: uv, poetry, conda, pipdeptree, docker, kubectl.
 ---
 
 # PyPI Supply Chain Attack Response

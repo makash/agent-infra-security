@@ -1,6 +1,8 @@
 ---
 name: supply-chain-security-check
 description: Investigate whether a project, environment, container, or CI pipeline is affected by a dependency supply chain incident. Find direct and transitive usage, check compromised versions and indicators of compromise, and recommend containment and remediation actions.
+license: MIT
+compatibility: Requires Bash and Python 3. Optional: pip, pipdeptree, docker, kubectl, jq, rg.
 ---
 
 # Supply Chain Security Check

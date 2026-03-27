@@ -6,17 +6,19 @@
   },
   "metadata": {
     "description": "Security skills for AI coding agents — incident response for supply chain attacks, credential rotation, IOC detection",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "plugins": [
     {
       "name": "supply-chain-skills",
-      "description": "Supply chain attack response skills — PyPI-specific deep triage and multi-ecosystem blast radius scanning with IOC detection, credential rotation, and prevention",
+      "description": "Supply chain attack response skills — PyPI triage, GitHub Actions compromise response, multi-ecosystem blast radius scanning, and credential exfiltration detection",
       "source": "./",
       "strict": false,
       "skills": [
         "./skills/pypi-supply-chain-response",
-        "./skills/supply-chain-security-check"
+        "./skills/supply-chain-security-check",
+        "./skills/github-actions-supply-chain-response",
+        "./skills/credential-exfiltration-detection"
       ]
     }
   ]

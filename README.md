@@ -39,6 +39,24 @@ Multi-ecosystem blast radius scan. Works for PyPI, npm, crates.io, RubyGems, Mav
 
 **Use both together:** `supply-chain-security-check` for the initial "are we affected anywhere?" scan across your whole stack, then `pypi-supply-chain-response` for deep Python-specific investigation.
 
+### Skill: [github-actions-supply-chain-response](skills/github-actions-supply-chain-response/)
+
+Incident response for compromised GitHub Actions — tag overwriting attacks where the action's code is replaced with a credential stealer. Built around the TeamPCP cascading campaign: **Trivy** (76/77 tags overwritten, Mar 19) **-> Checkmarx KICS** (35 tags hijacked, Mar 23) **-> LiteLLM** (backdoored PyPI versions, Mar 24). Each compromise's stolen credentials enabled the next.
+
+Six-phase workflow: exposure check across org, run window confirmation, IOC hunting in workflow logs, containment, credential rotation, prevention.
+
+**Standalone tools included:**
+- [`check_gha_compromise.sh`](skills/github-actions-supply-chain-response/scripts/check_gha_compromise.sh) — scans your GitHub org for affected action references and workflow runs during attack windows
+- [`ioc-patterns.md`](skills/github-actions-supply-chain-response/references/ioc-patterns.md) — C2 domains, file hashes, malicious commit SHAs, persistence paths, Docker image digests for both Trivy and KICS
+
+### Skill: [credential-exfiltration-detection](skills/credential-exfiltration-detection/)
+
+Post-incident detection: **were my stolen credentials actually used?** Pairs with any of the above skills as a follow-up. Four-phase workflow: scope credentials at risk, check cloud audit trails (AWS CloudTrail, GCP Audit Logs, Azure Activity Log, GitHub audit log, Kubernetes), detect lateral movement, verify rotation completeness.
+
+**Standalone tools included:**
+- [`cloud-audit-queries.md`](skills/credential-exfiltration-detection/references/cloud-audit-queries.md) — ready-to-run queries for each cloud provider with expected output examples
+- [`credential-scope-checklist.md`](skills/credential-exfiltration-detection/references/credential-scope-checklist.md) — complete checklist of credential types and storage locations
+
 ## Install and use
 
 ### Claude Code
@@ -59,9 +77,11 @@ You: litellm got backdoored — versions 1.82.7 and 1.82.8. Am I affected?
 
 You: we use dspy in production and I'm worried about transitive deps. check everything.
 
-You: generate a full incident response runbook for the litellm compromise and save it as a markdown file
+You: the trivy github action got compromised. scan our org for any workflows that used it.
 
-You: give me a check_compromise.sh script with --dry-run that I can share with my team
+You: after the KICS incident, check if any of our stolen CI credentials were actually used.
+
+You: generate a full incident response runbook for the litellm compromise and save it.
 ```
 
 ### Codex
@@ -117,19 +137,12 @@ For the full manual playbook covering **Windows (PowerShell), macOS, and Linux**
 ```
 agent-infra-security/
 ├── skills/
-│   ├── pypi-supply-chain-response/          # PyPI-specific deep triage
-│   │   ├── SKILL.md                         # Agent skill instructions
-│   │   ├── README.md
-│   │   ├── references/
-│   │   │   ├── ioc-patterns.md              # IOC pattern library
-│   │   │   └── manual-investigation-playbook.md  # Windows/macOS/Linux playbook
-│   │   └── scripts/
-│   │       └── check_compromise_template.sh # Standalone automated checker
-│   └── supply-chain-security-check/         # Multi-ecosystem blast radius scan
-│       ├── SKILL.md                         # Agent skill instructions
-│       └── README.md
-├── CATALOG.md                               # Skill index with trigger phrases
-└── LICENSE                                  # MIT
+│   ├── pypi-supply-chain-response/              # PyPI-specific deep triage
+│   ├── supply-chain-security-check/             # Multi-ecosystem blast radius scan
+│   ├── github-actions-supply-chain-response/    # GitHub Actions tag tampering response
+│   └── credential-exfiltration-detection/       # Post-incident credential abuse detection
+├── CATALOG.md                                   # Skill index with trigger phrases
+└── LICENSE                                      # MIT
 ```
 
 ## Contributing

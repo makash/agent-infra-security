@@ -1,25 +1,3 @@
 {
-  "name": "agent-infra-security",
-  "owner": {
-    "name": "Akash Mahajan",
-    "email": "makash@users.noreply.github.com"
-  },
-  "metadata": {
-    "description": "Security skills for AI coding agents — incident response for supply chain attacks, credential rotation, IOC detection",
-    "version": "1.1.0"
-  },
-  "plugins": [
-    {
-      "name": "agent-infra-security",
-      "description": "Security skills for AI coding agents — incident response for supply chain attacks, credential rotation, IOC detection",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./skills/pypi-supply-chain-response",
-        "./skills/supply-chain-security-check",
-        "./skills/github-actions-supply-chain-response",
-        "./skills/credential-exfiltration-detection"
-      ]
-    }
-  ]
+  "name": "agent-infra-security"
 }

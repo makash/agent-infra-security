@@ -13,7 +13,7 @@
       "name": "agent-infra-security",
       "description": "Security skills for AI coding agents — incident response for supply chain attacks, credential rotation, IOC detection",
       "source": "./",
-      "strict": false,
+      "strict": true,
       "skills": [
         "./skills/pypi-supply-chain-response",
         "./skills/supply-chain-security-check",

@@ -384,26 +384,26 @@ The skill inspects the current project and produces findings + fixes for:
 
 ### Functional Requirements
 
-- [ ] `npm-supply-chain-response` skill triggers on "axios got compromised" and walks through 6-phase investigation
-- [ ] `npm-supply-chain-response` produces all 3 output modes (checklist, runbook, script)
-- [ ] `npm-supply-chain-response` includes Axios-specific IOCs (sfrclak.com, plain-crypto-js, platform payloads)
-- [ ] `credential-exfiltration-response` handles both entry points: detect-first and skip-to-rotation
-- [ ] `credential-exfiltration-response` includes complete rotation checklists for all credential classes
-- [ ] `pypi-supply-chain-response` Phase 5 hands off to credential skill (no inline rotation)
-- [ ] `github-actions-supply-chain-response` Phase 5 hands off to credential skill (no inline rotation)
-- [ ] `supply-chain-security-check` contains zero Python-specific hardcoded commands
-- [ ] `supply-chain-security-check` has multi-ecosystem command reference table
-- [ ] `supply-chain-best-practices` auto-triggers on risky dependency patterns
-- [ ] `supply-chain-best-practices` checks pinning, lockfiles, CI secrets, SBOM, vuln scanning
-- [ ] All skills discoverable via `/skills` as `(agent-infra-security)`
-- [ ] CATALOG.md updated with all 6 skills
+- [x] `npm-supply-chain-response` skill triggers on "axios got compromised" and walks through 6-phase investigation
+- [x] `npm-supply-chain-response` produces all 3 output modes (checklist, runbook, script)
+- [x] `npm-supply-chain-response` includes Axios-specific IOCs (sfrclak.com, plain-crypto-js, platform payloads)
+- [x] `credential-exfiltration-response` handles both entry points: detect-first and skip-to-rotation
+- [x] `credential-exfiltration-response` includes complete rotation checklists for all credential classes
+- [x] `pypi-supply-chain-response` Phase 5 hands off to credential skill (no inline rotation)
+- [x] `github-actions-supply-chain-response` Phase 5 hands off to credential skill (no inline rotation)
+- [x] `supply-chain-security-check` contains zero Python-specific hardcoded commands
+- [x] `supply-chain-security-check` has multi-ecosystem command reference table
+- [x] `supply-chain-best-practices` auto-triggers on risky dependency patterns
+- [x] `supply-chain-best-practices` checks pinning, lockfiles, CI secrets, SBOM, vuln scanning
+- [ ] All skills discoverable via `/skills` as `(agent-infra-security)` — requires push + reinstall
+- [x] CATALOG.md updated with all 6 skills
 
 ### Quality Gates
 
-- [ ] No credential rotation content duplicated across skills (single owner: credential-exfiltration-response)
-- [ ] No ecosystem-specific commands in supply-chain-security-check
-- [ ] All IOC data verified against source (Elastic Security gist for Axios)
-- [ ] No fabricated values — all emails, URLs, hashes verified against git or source material
+- [x] No credential rotation content duplicated across skills (single owner: credential-exfiltration-response)
+- [x] No ecosystem-specific commands in supply-chain-security-check
+- [x] All IOC data verified against source (Elastic Security gist for Axios)
+- [x] No fabricated values — all emails, URLs, hashes verified against git or source material
 
 ## References
 

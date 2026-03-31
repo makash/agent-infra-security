@@ -1,149 +1,137 @@
 # agent-infra-security
 
-Security skills for AI coding agents. Detect compromised packages, triage supply chain attacks, rotate credentials, and hunt for IOCs — using Claude Code, Codex, Cursor, or standalone scripts.
+Security skills for AI coding agents. When your dependencies get compromised, these skills are the incident response playbook your agent follows.
 
 ![demo](assets/demo.gif)
 
-## The problem
+## Three supply chain attacks in ten days
 
-**You installed a package. It got backdoored. Now what?**
+**March 19, 2026 — Trivy.** Attackers compromise 76 of 77 tags on `aquasecurity/trivy-action`. Every GitHub Actions workflow using a tag reference runs attacker-controlled code. CI secrets — cloud credentials, deploy keys, package registry tokens — are exfiltrated via dead-drop repos.
 
-If you're building with LLMs, your dependency tree is deep and largely unaudited. Packages like LiteLLM route API keys for dozens of providers and get pulled in transitively by frameworks like CrewAI, DSPy, and Browser-Use. When one gets compromised, most teams don't have a playbook.
+**March 23, 2026 — KICS.** Using credentials stolen from the Trivy attack, attackers pivot to Checkmarx KICS, overwriting 35 tags on `checkmarx/kics-github-action`. The cascade continues.
 
-Here's what actually goes wrong:
+**March 24, 2026 — LiteLLM.** Credentials stolen from the KICS compromise are used to publish backdoored versions of LiteLLM on PyPI (1.82.7, 1.82.8). The malware drops a `.pth` file in `site-packages/` — Python executes it on every interpreter startup, before your code even imports. SSH keys, AWS credentials, `.env` files, everything is swept and exfiltrated. Most affected developers never directly installed LiteLLM — it was pulled in transitively by CrewAI, DSPy, and Browser-Use.
 
-**You're exposed and don't know it.** You never ran `pip install litellm`. But `dspy` depends on it, so it's in your environment. `pipdeptree -r` would have shown you — but you've never run it.
+**March 31, 2026 — Axios.** The npm maintainer account `jasonsaayman` is compromised. Malicious versions `axios@1.14.1` and `axios@0.30.4` are published, injecting a typosquatted dependency `plain-crypto-js` that deploys platform-specific backdoors: a disguised binary on macOS (`/Library/Caches/com.apple.act.mond`), a renamed PowerShell on Windows (`wt.exe`), a Python script on Linux (`/tmp/ld.py`). The payload self-deletes its installer and swaps `package.json` to cover its tracks. Axios has 80 million weekly downloads.
 
-**The malware runs before your code does.** Modern PyPI attacks drop `.pth` files in `site-packages/`. Python executes these at interpreter startup — not at import time. npm attacks use `postinstall` scripts that run during `npm install`. Both fire with the installing user's full permissions.
+**One compromised account cascaded across three ecosystems in ten days.** GitHub Actions → PyPI → npm. Each attack used credentials stolen from the previous one.
 
-**Your credentials are already gone.** The payload swept `~/.aws/credentials`, `~/.ssh/id_rsa`, `~/.kube/config`, every `.env` file, and your git tokens. It POST'd them to a lookalike domain. Rotating "the API key" isn't enough — everything on that machine is burned.
+## Why agents need security skills
 
-**There's no playbook at 2am.** The advisory drops, Slack lights up, and your team is grepping StackOverflow. These skills encode the triage process a security engineer would walk you through.
+AI coding agents run `pip install`, `npm install`, and GitHub Actions workflows on your behalf. They pull dependencies, build containers, and deploy code. When a supply chain attack hits, the agent that installed the compromised package is also the fastest path to triage:
+
+- It already knows your dependency tree
+- It can search lockfiles, caches, and environments faster than you can type commands
+- It can walk through a structured incident response instead of you grepping StackOverflow at 2am
+
+But agents don't know incident response by default. These skills teach them.
 
 ## What's in this repo
 
-### Skill: [npm-supply-chain-response](skills/npm-supply-chain-response/)
+Six skills organized in layers:
 
-Deep triage for a compromised npm package. Built around the Axios supply chain attack (March 31, 2026) — account compromise, typosquatted dependency injection (`plain-crypto-js`), multi-platform backdoors, anti-forensics.
+### Ecosystem-specific incident response
 
-Six-phase incident response: exposure check (lockfiles, node_modules, npm cache), version confirmation, IOC hunting, containment, credential rotation (via handoff), prevention.
+**[npm-supply-chain-response](skills/npm-supply-chain-response/)** — Deep triage for compromised npm packages. Built around the Axios attack: typosquatted dependency injection, multi-platform backdoors, anti-forensics (self-deleting `setup.js`, `package.md` swap). Six-phase workflow with three output modes (interactive checklist, runbook, automated script).
 
-**Standalone tools included:**
-- [`check_npm_compromise.sh`](skills/npm-supply-chain-response/scripts/check_npm_compromise.sh) — automated checker with `--dry-run` support
-- [`ioc-patterns.md`](skills/npm-supply-chain-response/references/ioc-patterns.md) — Axios-specific and generic npm IOC patterns
+**[pypi-supply-chain-response](skills/pypi-supply-chain-response/)** — Deep triage for compromised PyPI packages. Built around the LiteLLM attack: `.pth` startup hooks, transitive dependency exposure via `pipdeptree -r`, credential harvesting. Cross-platform manual playbook (Windows PowerShell, macOS, Linux).
 
-### Skill: [pypi-supply-chain-response](skills/pypi-supply-chain-response/)
+**[github-actions-supply-chain-response](skills/github-actions-supply-chain-response/)** — Incident response for tag overwriting attacks. Built around the Trivy → KICS cascade: org-wide workflow scanning, run window confirmation, IOC hunting in CI logs, dead-drop repo detection.
 
-Deep triage for a compromised Python package. Six-phase incident response: exposure check (including transitive dependencies via `pipdeptree -r`), version confirmation, IOC hunting, containment, credential rotation (via handoff), prevention.
+### Credential lifecycle
 
-**Standalone tools included:**
-- [`check_compromise_template.sh`](skills/pypi-supply-chain-response/scripts/check_compromise_template.sh) — color-coded automated checker
-- [`ioc-patterns.md`](skills/pypi-supply-chain-response/references/ioc-patterns.md) — IOC pattern library covering .pth attacks, persistence, credential harvesting
-- [`manual-investigation-playbook.md`](skills/pypi-supply-chain-response/references/manual-investigation-playbook.md) — cross-platform manual playbook (Windows PowerShell, macOS, Linux)
+**[credential-exfiltration-response](skills/credential-exfiltration-response/)** — Full detection-to-rotation lifecycle. All ecosystem skills hand off here. Covers 13 credential classes (SSH, AWS with STS session invalidation, GCP, Azure, GitHub, npm, PyPI, Docker, Kubernetes, databases, `.env` secrets, CI/CD secrets, crypto wallets). Includes audit trail queries for every major cloud provider.
 
-### Skill: [github-actions-supply-chain-response](skills/github-actions-supply-chain-response/)
+### Generic fallback
 
-Incident response for compromised GitHub Actions — tag overwriting attacks where the action's code is replaced with a credential stealer. Built around the TeamPCP cascading campaign: **Trivy** -> **KICS** -> **LiteLLM**.
+**[supply-chain-security-check](skills/supply-chain-security-check/)** — Multi-ecosystem fallback for Go, Rust, Ruby, Java, .NET, Docker, and incidents that span multiple ecosystems. Routes to ecosystem-specific skills when available.
 
-**Standalone tools included:**
-- [`check_gha_compromise.sh`](skills/github-actions-supply-chain-response/scripts/check_gha_compromise.sh) — scans your GitHub org for affected action references
-- [`ioc-patterns.md`](skills/github-actions-supply-chain-response/references/ioc-patterns.md) — C2 domains, malicious commit SHAs, persistence paths
+### Proactive hardening
 
-### Skill: [credential-exfiltration-response](skills/credential-exfiltration-response/)
-
-Full credential lifecycle after a security incident — detection through rotation and verification. Six-phase workflow: scope credentials at risk, check cloud audit trails (AWS CloudTrail, GCP Audit Logs, Azure Activity Log, GitHub, Kubernetes), detect lateral movement, scope rotation requirements, rotate per credential class (13 credential types with detect/rotate/verify), verify completeness.
-
-All ecosystem skills hand off to this skill for credential rotation.
-
-**Standalone tools included:**
-- [`cloud-audit-queries.md`](skills/credential-exfiltration-response/references/cloud-audit-queries.md) — ready-to-run queries for each cloud provider
-- [`credential-scope-checklist.md`](skills/credential-exfiltration-response/references/credential-scope-checklist.md) — complete credential type checklist
-
-### Skill: [supply-chain-security-check](skills/supply-chain-security-check/)
-
-Generic fallback for ecosystems without a dedicated skill (Go, Rust, Ruby, Java, .NET, Docker). Multi-ecosystem command tables for dependency checking, transitive discovery, and version pinning. Routes to ecosystem-specific skills when available.
-
-### Skill: [supply-chain-best-practices](skills/supply-chain-best-practices/)
-
-Proactive dependency hardening. Nine-category audit: version pinning, lockfile integrity, install hooks, vulnerability scanning, provenance/signing, CI secret scoping, SBOM generation, update strategy, package manager hardening. Produces PASS/WARN/FAIL checklist report.
+**[supply-chain-best-practices](skills/supply-chain-best-practices/)** — Nine-category dependency audit: version pinning, lockfile integrity, install hooks, vulnerability scanning, provenance verification, CI secret scoping, SBOM generation, update strategy, package manager hardening. Produces a PASS/WARN/FAIL checklist. Use this before an incident, not during one.
 
 ## Install and use
 
 ### Claude Code
 
 ```bash
-# Install via plugin marketplace
+# Install from marketplace
 /plugin marketplace add makash/agent-infra-security
 /plugin install agent-infra-security@agent-infra-security
 
-# Or install a specific skill directly
-claude skill add ./skills/pypi-supply-chain-response
+# Or add a specific skill directly
+claude skill add ./skills/npm-supply-chain-response
 ```
 
-Then just talk to it:
+Then just talk:
 
 ```
-You: axios got compromised — versions 1.14.1 and 0.30.4. Am I affected?
+You: axios got compromised — 1.14.1 and 0.30.4 are backdoored. Am I affected?
 
-You: litellm got backdoored — versions 1.82.7 and 1.82.8. Am I affected?
+You: litellm got backdoored. I use dspy in production — check transitive deps.
 
-You: the trivy github action got compromised. scan our org for any workflows that used it.
+You: the trivy github action was compromised. scan our org for affected workflows.
 
-You: after the incident, check if any of our stolen credentials were actually used.
+You: we confirmed we ran the bad version. rotate everything.
 
-You: audit this project's dependency security — show me what needs hardening.
+You: audit this project's dependency security before we ship.
 ```
 
 ### Codex
 
 ```bash
-# Point Codex at the skill
 codex --skill ./skills/supply-chain-security-check
+```
+
+### No agent — standalone scripts
+
+Every ecosystem skill ships a shell script that works without any AI agent:
+
+```bash
+# npm — check for Axios compromise
+./skills/npm-supply-chain-response/scripts/check_npm_compromise.sh axios --dry-run
+
+# PyPI — check for any compromised package
+./skills/pypi-supply-chain-response/scripts/check_compromise_template.sh
+
+# GitHub Actions — scan org for compromised action references
+./skills/github-actions-supply-chain-response/scripts/check_gha_compromise.sh
 ```
 
 ### No agent — just the commands
 
-If a package just got reported as compromised and you need to check right now:
-
 ```bash
-# npm
-npm ls <PACKAGE> 2>/dev/null
-grep "<PACKAGE>" package-lock.json yarn.lock pnpm-lock.yaml 2>/dev/null
+# npm: is the bad version installed?
+grep "axios" package-lock.json yarn.lock pnpm-lock.yaml 2>/dev/null
+ls node_modules/plain-crypto-js 2>/dev/null  # malicious dependency = confirmed compromise
 
-# Python
-pip show <PACKAGE> | grep -E "^(Name|Version|Location)"
-pipdeptree -r -p <PACKAGE>
+# Python: what pulled in litellm?
+pip show litellm | grep Version
+pipdeptree -r -p litellm  # shows dspy, crewai, browser-use as parents
 
-# Any ecosystem — find it anywhere on this machine
-find / -path "*/<PACKAGE>*" -type d 2>/dev/null | head -20
+# GitHub Actions: who's using mutable tags?
+grep -rn 'uses:.*@v' .github/workflows/
 ```
-
-**Platform coverage:**
-
-| Platform | Quick checks above | Full manual playbook | Automated shell script |
-|----------|-------------------|---------------------|----------------------|
-| Linux | Yes | Yes (bash) | Yes |
-| macOS | Yes | Yes (bash) | Yes |
-| Windows | No | Yes (PowerShell) | No |
 
 ## Repo structure
 
 ```
 agent-infra-security/
 ├── skills/
-│   ├── npm-supply-chain-response/                # npm/Node.js deep triage
-│   ├── pypi-supply-chain-response/               # PyPI/Python deep triage
-│   ├── github-actions-supply-chain-response/     # GitHub Actions tag tampering response
-│   ├── credential-exfiltration-response/         # Credential detection + rotation lifecycle
-│   ├── supply-chain-security-check/              # Generic multi-ecosystem fallback
-│   └── supply-chain-best-practices/              # Proactive dependency hardening
-├── .claude-plugin/                                # Plugin manifests
+│   ├── npm-supply-chain-response/                # Axios, and any future npm compromise
+│   ├── pypi-supply-chain-response/               # LiteLLM, and any future PyPI compromise
+│   ├── github-actions-supply-chain-response/     # Trivy/KICS, and any future GHA compromise
+│   ├── credential-exfiltration-response/         # Detection + rotation for 13 credential classes
+│   ├── supply-chain-security-check/              # Generic fallback (Go, Rust, Ruby, Java, .NET)
+│   └── supply-chain-best-practices/              # Proactive hardening audit
+├── .claude-plugin/                                # Plugin manifests for marketplace
+├── CATALOG.md                                     # Skill index with trigger phrases
 └── LICENSE                                        # MIT
 ```
 
 ## Contributing
 
-New skills are curated by the maintainer. If you have a playbook idea, [open an issue](../../issues) to discuss.
+New skills are curated by the maintainer. If you have a playbook idea or an incident that needs coverage, [open an issue](../../issues).
 
 ## License
 

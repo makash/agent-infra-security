@@ -50,34 +50,49 @@ Six skills organized in layers:
 
 **[supply-chain-best-practices](skills/supply-chain-best-practices/)** — Nine-category dependency audit: version pinning, lockfile integrity, install hooks, vulnerability scanning, provenance verification, CI secret scoping, SBOM generation, update strategy, package manager hardening. Produces a PASS/WARN/FAIL checklist. Use this before an incident, not during one.
 
-## Install and use
+## Install
 
-### Claude Code — from your terminal
+Add the marketplace in Claude Code:
+
+```
+/plugin marketplace add makash/agent-infra-security
+```
+
+Install the plugin:
+
+```
+/plugin install agent-infra-security@agent-infra-security
+```
+
+Reload plugins:
+
+```
+/reload-plugins
+```
+
+If you're outside Claude Code, prefix with `claude`:
 
 ```bash
 claude "/plugin marketplace add makash/agent-infra-security"
 claude "/plugin install agent-infra-security@agent-infra-security"
 ```
 
-### Claude Code — from inside the REPL
+After install, you should see the skills listed in `/skills`.
+
+## Use
+
+Just describe the incident:
 
 ```
-/plugin marketplace add makash/agent-infra-security
-/plugin install agent-infra-security@agent-infra-security
-```
+axios got compromised — 1.14.1 and 0.30.4 are backdoored. Am I affected?
 
-Then just talk:
+litellm got backdoored. I use dspy in production — check transitive deps.
 
-```
-You: axios got compromised — 1.14.1 and 0.30.4 are backdoored. Am I affected?
+the trivy github action was compromised. scan our org for affected workflows.
 
-You: litellm got backdoored. I use dspy in production — check transitive deps.
+we confirmed we ran the bad version. rotate everything.
 
-You: the trivy github action was compromised. scan our org for affected workflows.
-
-You: we confirmed we ran the bad version. rotate everything.
-
-You: audit this project's dependency security before we ship.
+audit this project's dependency security before we ship.
 ```
 
 ### Codex

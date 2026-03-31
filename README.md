@@ -14,7 +14,7 @@ Here's what actually goes wrong:
 
 **You're exposed and don't know it.** You never ran `pip install litellm`. But `dspy` depends on it, so it's in your environment. `pipdeptree -r` would have shown you — but you've never run it.
 
-**The malware runs before your code does.** Modern PyPI attacks drop `.pth` files in `site-packages/`. Python executes these at interpreter startup — not at import time. Running `pip`, launching your IDE, or even `python -c "print('hello')"` triggers the payload.
+**The malware runs before your code does.** Modern PyPI attacks drop `.pth` files in `site-packages/`. Python executes these at interpreter startup — not at import time. npm attacks use `postinstall` scripts that run during `npm install`. Both fire with the installing user's full permissions.
 
 **Your credentials are already gone.** The payload swept `~/.aws/credentials`, `~/.ssh/id_rsa`, `~/.kube/config`, every `.env` file, and your git tokens. It POST'd them to a lookalike domain. Rotating "the API key" isn't enough — everything on that machine is burned.
 
@@ -22,40 +22,50 @@ Here's what actually goes wrong:
 
 ## What's in this repo
 
-### Skill: [pypi-supply-chain-response](skills/pypi-supply-chain-response/)
+### Skill: [npm-supply-chain-response](skills/npm-supply-chain-response/)
 
-Deep triage for a compromised Python package. Six-phase incident response: exposure check (including transitive dependencies), version confirmation, IOC hunting, containment, credential rotation, and prevention.
+Deep triage for a compromised npm package. Built around the Axios supply chain attack (March 31, 2026) — account compromise, typosquatted dependency injection (`plain-crypto-js`), multi-platform backdoors, anti-forensics.
 
-Three output modes — interactive triage checklist (walks you through step by step), full incident response runbook (shareable markdown), or automated shell script with `--dry-run`.
+Six-phase incident response: exposure check (lockfiles, node_modules, npm cache), version confirmation, IOC hunting, containment, credential rotation (via handoff), prevention.
 
 **Standalone tools included:**
-- [`check_compromise_template.sh`](skills/pypi-supply-chain-response/scripts/check_compromise_template.sh) — color-coded automated checker with confirmation prompts before any destructive action
-- [`ioc-patterns.md`](skills/pypi-supply-chain-response/references/ioc-patterns.md) — IOC pattern library covering .pth attacks, persistence mechanisms, credential harvesting targets, exfiltration patterns, and Kubernetes lateral movement
-- [`manual-investigation-playbook.md`](skills/pypi-supply-chain-response/references/manual-investigation-playbook.md) — cross-platform manual investigation playbook with full **Windows (PowerShell)**, macOS, and Linux coverage
+- [`check_npm_compromise.sh`](skills/npm-supply-chain-response/scripts/check_npm_compromise.sh) — automated checker with `--dry-run` support
+- [`ioc-patterns.md`](skills/npm-supply-chain-response/references/ioc-patterns.md) — Axios-specific and generic npm IOC patterns
 
-### Skill: [supply-chain-security-check](skills/supply-chain-security-check/)
+### Skill: [pypi-supply-chain-response](skills/pypi-supply-chain-response/)
 
-Multi-ecosystem blast radius scan. Works for PyPI, npm, crates.io, RubyGems, Maven, NuGet, Go modules, and Docker Hub. Seven-step workflow: confirm incident facts, search source and lockfiles across ecosystems, check installed environments for transitive use, hunt for IOCs, classify impact (five severity levels), recommend containment with per-class credential rotation, and prevent future incidents.
+Deep triage for a compromised Python package. Six-phase incident response: exposure check (including transitive dependencies via `pipdeptree -r`), version confirmation, IOC hunting, containment, credential rotation (via handoff), prevention.
 
-**Use both together:** `supply-chain-security-check` for the initial "are we affected anywhere?" scan across your whole stack, then `pypi-supply-chain-response` for deep Python-specific investigation.
+**Standalone tools included:**
+- [`check_compromise_template.sh`](skills/pypi-supply-chain-response/scripts/check_compromise_template.sh) — color-coded automated checker
+- [`ioc-patterns.md`](skills/pypi-supply-chain-response/references/ioc-patterns.md) — IOC pattern library covering .pth attacks, persistence, credential harvesting
+- [`manual-investigation-playbook.md`](skills/pypi-supply-chain-response/references/manual-investigation-playbook.md) — cross-platform manual playbook (Windows PowerShell, macOS, Linux)
 
 ### Skill: [github-actions-supply-chain-response](skills/github-actions-supply-chain-response/)
 
-Incident response for compromised GitHub Actions — tag overwriting attacks where the action's code is replaced with a credential stealer. Built around the TeamPCP cascading campaign: **Trivy** (76/77 tags overwritten, Mar 19) **-> Checkmarx KICS** (35 tags hijacked, Mar 23) **-> LiteLLM** (backdoored PyPI versions, Mar 24). Each compromise's stolen credentials enabled the next.
-
-Six-phase workflow: exposure check across org, run window confirmation, IOC hunting in workflow logs, containment, credential rotation, prevention.
+Incident response for compromised GitHub Actions — tag overwriting attacks where the action's code is replaced with a credential stealer. Built around the TeamPCP cascading campaign: **Trivy** -> **KICS** -> **LiteLLM**.
 
 **Standalone tools included:**
-- [`check_gha_compromise.sh`](skills/github-actions-supply-chain-response/scripts/check_gha_compromise.sh) — scans your GitHub org for affected action references and workflow runs during attack windows
-- [`ioc-patterns.md`](skills/github-actions-supply-chain-response/references/ioc-patterns.md) — C2 domains, file hashes, malicious commit SHAs, persistence paths, Docker image digests for both Trivy and KICS
+- [`check_gha_compromise.sh`](skills/github-actions-supply-chain-response/scripts/check_gha_compromise.sh) — scans your GitHub org for affected action references
+- [`ioc-patterns.md`](skills/github-actions-supply-chain-response/references/ioc-patterns.md) — C2 domains, malicious commit SHAs, persistence paths
 
-### Skill: [credential-exfiltration-detection](skills/credential-exfiltration-detection/)
+### Skill: [credential-exfiltration-response](skills/credential-exfiltration-response/)
 
-Post-incident detection: **were my stolen credentials actually used?** Pairs with any of the above skills as a follow-up. Four-phase workflow: scope credentials at risk, check cloud audit trails (AWS CloudTrail, GCP Audit Logs, Azure Activity Log, GitHub audit log, Kubernetes), detect lateral movement, verify rotation completeness.
+Full credential lifecycle after a security incident — detection through rotation and verification. Six-phase workflow: scope credentials at risk, check cloud audit trails (AWS CloudTrail, GCP Audit Logs, Azure Activity Log, GitHub, Kubernetes), detect lateral movement, scope rotation requirements, rotate per credential class (13 credential types with detect/rotate/verify), verify completeness.
+
+All ecosystem skills hand off to this skill for credential rotation.
 
 **Standalone tools included:**
-- [`cloud-audit-queries.md`](skills/credential-exfiltration-detection/references/cloud-audit-queries.md) — ready-to-run queries for each cloud provider with expected output examples
-- [`credential-scope-checklist.md`](skills/credential-exfiltration-detection/references/credential-scope-checklist.md) — complete checklist of credential types and storage locations
+- [`cloud-audit-queries.md`](skills/credential-exfiltration-response/references/cloud-audit-queries.md) — ready-to-run queries for each cloud provider
+- [`credential-scope-checklist.md`](skills/credential-exfiltration-response/references/credential-scope-checklist.md) — complete credential type checklist
+
+### Skill: [supply-chain-security-check](skills/supply-chain-security-check/)
+
+Generic fallback for ecosystems without a dedicated skill (Go, Rust, Ruby, Java, .NET, Docker). Multi-ecosystem command tables for dependency checking, transitive discovery, and version pinning. Routes to ecosystem-specific skills when available.
+
+### Skill: [supply-chain-best-practices](skills/supply-chain-best-practices/)
+
+Proactive dependency hardening. Nine-category audit: version pinning, lockfile integrity, install hooks, vulnerability scanning, provenance/signing, CI secret scoping, SBOM generation, update strategy, package manager hardening. Produces PASS/WARN/FAIL checklist report.
 
 ## Install and use
 
@@ -64,7 +74,7 @@ Post-incident detection: **were my stolen credentials actually used?** Pairs wit
 ```bash
 # Install via plugin marketplace
 /plugin marketplace add makash/agent-infra-security
-/plugin install supply-chain-skills@agent-infra-security
+/plugin install agent-infra-security@agent-infra-security
 
 # Or install a specific skill directly
 claude skill add ./skills/pypi-supply-chain-response
@@ -73,15 +83,15 @@ claude skill add ./skills/pypi-supply-chain-response
 Then just talk to it:
 
 ```
-You: litellm got backdoored — versions 1.82.7 and 1.82.8. Am I affected?
+You: axios got compromised — versions 1.14.1 and 0.30.4. Am I affected?
 
-You: we use dspy in production and I'm worried about transitive deps. check everything.
+You: litellm got backdoored — versions 1.82.7 and 1.82.8. Am I affected?
 
 You: the trivy github action got compromised. scan our org for any workflows that used it.
 
-You: after the KICS incident, check if any of our stolen CI credentials were actually used.
+You: after the incident, check if any of our stolen credentials were actually used.
 
-You: generate a full incident response runbook for the litellm compromise and save it.
+You: audit this project's dependency security — show me what needs hardening.
 ```
 
 ### Codex
@@ -91,35 +101,21 @@ You: generate a full incident response runbook for the litellm compromise and sa
 codex --skill ./skills/supply-chain-security-check
 ```
 
-Sample prompt:
-
-```
-Check if this project uses litellm anywhere — directly or as a transitive
-dependency. Versions 1.82.7 and 1.82.8 are compromised. Check all Python
-environments, Docker images, and CI logs. If found, classify the impact,
-list what credentials need rotation, and give me exact commands to contain it.
-```
-
 ### No agent — just the commands
 
 If a package just got reported as compromised and you need to check right now:
 
 ```bash
-# Is it installed? What version?
+# npm
+npm ls <PACKAGE> 2>/dev/null
+grep "<PACKAGE>" package-lock.json yarn.lock pnpm-lock.yaml 2>/dev/null
+
+# Python
 pip show <PACKAGE> | grep -E "^(Name|Version|Location)"
+pipdeptree -r -p <PACKAGE>
 
-# What pulled it in? (the step most people miss)
-pip install pipdeptree && pipdeptree -r -p <PACKAGE>
-
-# Other environments on this machine?
-find / -path "*/site-packages/<PACKAGE>" -type d 2>/dev/null
-
-# Malicious .pth startup hooks?
-SITE=$(python -c "import site; print(site.getsitepackages()[0])")
-find "$SITE" -name "*.pth" -exec grep -l "base64\|subprocess\|exec\|eval\|compile" {} \;
-
-# Cached wheels that could reinstall the bad version?
-pip cache list <PACKAGE>
+# Any ecosystem — find it anywhere on this machine
+find / -path "*/<PACKAGE>*" -type d 2>/dev/null | head -20
 ```
 
 **Platform coverage:**
@@ -130,19 +126,19 @@ pip cache list <PACKAGE>
 | macOS | Yes | Yes (bash) | Yes |
 | Windows | No | Yes (PowerShell) | No |
 
-For the full manual playbook covering **Windows (PowerShell), macOS, and Linux**, see [`manual-investigation-playbook.md`](skills/pypi-supply-chain-response/references/manual-investigation-playbook.md).
-
 ## Repo structure
 
 ```
 agent-infra-security/
 ├── skills/
-│   ├── pypi-supply-chain-response/              # PyPI-specific deep triage
-│   ├── supply-chain-security-check/             # Multi-ecosystem blast radius scan
-│   ├── github-actions-supply-chain-response/    # GitHub Actions tag tampering response
-│   └── credential-exfiltration-detection/       # Post-incident credential abuse detection
-├── CATALOG.md                                   # Skill index with trigger phrases
-└── LICENSE                                      # MIT
+│   ├── npm-supply-chain-response/                # npm/Node.js deep triage
+│   ├── pypi-supply-chain-response/               # PyPI/Python deep triage
+│   ├── github-actions-supply-chain-response/     # GitHub Actions tag tampering response
+│   ├── credential-exfiltration-response/         # Credential detection + rotation lifecycle
+│   ├── supply-chain-security-check/              # Generic multi-ecosystem fallback
+│   └── supply-chain-best-practices/              # Proactive dependency hardening
+├── .claude-plugin/                                # Plugin manifests
+└── LICENSE                                        # MIT
 ```
 
 ## Contributing

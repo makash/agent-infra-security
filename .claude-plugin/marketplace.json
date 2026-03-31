@@ -5,20 +5,20 @@
     "email": "akash@kloudle.com"
   },
   "metadata": {
-    "description": "Security skills for AI coding agents — incident response for supply chain attacks, credential rotation, IOC detection",
-    "version": "1.1.0"
+    "description": "Security skills for AI coding agents — supply chain incident response, credential rotation, IOC detection, and dependency hardening across npm, PyPI, GitHub Actions, and more",
+    "version": "2.0.0"
   },
   "plugins": [
     {
       "name": "agent-infra-security",
-      "description": "Security skills for AI coding agents — incident response for supply chain attacks, credential rotation, IOC detection",
-      "version": "1.1.0",
+      "description": "Security skills for AI coding agents — supply chain incident response, credential rotation, IOC detection, and dependency hardening across npm, PyPI, GitHub Actions, and more",
+      "version": "2.0.0",
       "author": {
         "name": "Akash Mahajan",
         "email": "akash@kloudle.com"
       },
       "homepage": "https://github.com/makash/agent-infra-security",
-      "tags": ["security", "supply-chain", "incident-response", "credential-rotation", "ioc-detection"],
+      "tags": ["security", "supply-chain", "incident-response", "credential-rotation", "ioc-detection", "npm", "best-practices"],
       "source": "./"
     }
   ]

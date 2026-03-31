@@ -52,15 +52,18 @@ Six skills organized in layers:
 
 ## Install and use
 
-### Claude Code
+### Claude Code — from your terminal
 
 ```bash
-# Install from marketplace
+claude "/plugin marketplace add makash/agent-infra-security"
+claude "/plugin install agent-infra-security@agent-infra-security"
+```
+
+### Claude Code — from inside the REPL
+
+```
 /plugin marketplace add makash/agent-infra-security
 /plugin install agent-infra-security@agent-infra-security
-
-# Or add a specific skill directly
-claude skill add ./skills/npm-supply-chain-response
 ```
 
 Then just talk:
